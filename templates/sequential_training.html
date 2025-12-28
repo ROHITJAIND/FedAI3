@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Federated Learning Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="logo">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 40 40"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="20"
+                cy="20"
+                r="18"
+                stroke="url(#gradient)"
+                stroke-width="3"
+              />
+              <circle cx="20" cy="20" r="8" fill="url(#gradient)" />
+              <defs>
+                <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                  <stop offset="0%" stop-color="#667eea" />
+                  <stop offset="100%" stop-color="#764ba2" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1>Federated Learning</h1>
+          </div>
+          <div class="status-badge" id="serverStatus">
+            <span class="status-dot"></span>
+            <span class="status-text">Checking...</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Control Panel -->
+        <section class="control-panel card">
+          <h2>Training Configuration</h2>
+          <div class="config-grid">
+            <div class="config-item">
+              <label for="rounds">Number of Rounds</label>
+              <input type="number" id="rounds" value="5" min="1" max="20" />
+            </div>
+            <div class="config-item">
+              <label for="epochs">Epochs per Hospital</label>
+              <input type="number" id="epochs" value="3" min="1" max="10" />
+            </div>
+          </div>
+          <button
+            class="btn btn-primary"
+            id="startBtn"
+            onclick="startTraining()"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 3l12 7-12 7V3z" />
+            </svg>
+            Start Training
+          </button>
+        </section>
+
+        <!-- Progress Overview -->
+        <section class="progress-section">
+          <div class="card progress-card">
+            <h3>Training Progress</h3>
+            <div class="progress-info">
+              <div class="progress-stat">
+                <span class="stat-label">Current Round</span>
+                <span class="stat-value" id="currentRound">0 / 0</span>
+              </div>
+              <div class="progress-stat">
+                <span class="stat-label">Active Hospital</span>
+                <span class="stat-value" id="activeHospital">-</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progressBar">
+                <div class="progress-fill"></div>
+              </div>
+              <span class="progress-percentage" id="progressPercent">0%</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Hospital Status Grid -->
+        <section class="hospitals-grid">
+          <div class="card hospital-card hospital-a">
+            <div class="hospital-header">
+              <div class="hospital-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M16 2L2 8v12c0 7 4.5 11.5 14 14 9.5-2.5 14-7 14-14V8L16 2zm0 4.5l10 4.5v9c0 5.5-3.5 9-10 11-6.5-2-10-5.5-10-11V11l10-4.5z"
+                  />
+                  <rect x="14" y="10" width="4" height="12" rx="1" />
+                  <rect x="10" y="14" width="12" height="4" rx="1" />
+                </svg>
+              </div>
+              <h3>Hospital A</h3>
+            </div>
+            <div class="hospital-status" id="statusA">
+              <span class="status-indicator">●</span>
+              <span>Idle</span>
+            </div>
+            <div class="hospital-metrics">
+              <div class="metric">
+                <span class="metric-label">Loss</span>
+                <span class="metric-value" id="lossA">-</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Accuracy</span>
+                <span class="metric-value" id="accA">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card hospital-card hospital-b">
+            <div class="hospital-header">
+              <div class="hospital-icon">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M16 2L2 8v12c0 7 4.5 11.5 14 14 9.5-2.5 14-7 14-14V8L16 2zm0 4.5l10 4.5v9c0 5.5-3.5 9-10 11-6.5-2-10-5.5-10-11V11l10-4.5z"
+                  />
+                  <rect x="14" y="10" width="4" height="12" rx="1" />
+                  <rect x="10" y="14" width="12" height="4" rx="1" />
+                </svg>
+              </div>
+              <h3>Hospital B</h3>
+            </div>
+            <div class="hospital-status" id="statusB">
+              <span class="status-indicator">●</span>
+              <span>Idle</span>
+            </div>
+            <div class="hospital-metrics">
+              <div class="metric">
+                <span class="metric-label">Loss</span>
+                <span class="metric-value" id="lossB">-</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Accuracy</span>
+                <span class="metric-value" id="accB">-</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+          <div class="card chart-card">
+            <h3>Training Metrics</h3>
+            <canvas id="metricsChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="log-section card">
+          <h3>Activity Log</h3>
+          <div class="log-controls">
+            <button class="btn btn-small" onclick="clearLogs()">Clear</button>
+            <button
+              class="btn btn-small"
+              id="autoScrollBtn"
+              onclick="toggleAutoScroll()"
+            >
+              Auto-scroll: ON
+            </button>
+          </div>
+          <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">
+              <span class="log-time">00:00:00</span>
+              <span class="log-message">Waiting to start training...</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

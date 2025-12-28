@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hospital {{ hospital_id }} - Federated Learning</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/hospital_style.css') }}"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="logo">
+            <div class="hospital-badge hospital-{{ hospital_id|lower }}">
+              <span class="hospital-letter">{{ hospital_id }}</span>
+            </div>
+            <div>
+              <h1>Hospital {{ hospital_id }}</h1>
+              <p class="subtitle">Federated Learning Node</p>
+            </div>
+          </div>
+          {% if user %}
+          <div class="user-profile">
+            <div class="user-info">
+              {% if user.picture %}
+              <img
+                src="{{ user.picture }}"
+                alt="{{ user.name }}"
+                class="user-avatar"
+              />
+              {% else %}
+              <div class="user-avatar-placeholder">{{ user.name[0] }}</div>
+              {% endif %}
+              <div class="user-details">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-logout">Logout</a>
+          </div>
+          {% endif %}
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Quick Actions -->
+        <section class="actions-panel">
+          <div class="action-card card">
+            <div class="action-icon download-icon">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <h3>Download Global Model</h3>
+            <p>Get the latest model from central server</p>
+            <div
+              class="progress-wrapper"
+              id="downloadProgressWrapper"
+              style="display: none"
+            >
+              <div class="progress-bar-slim">
+                <div class="progress-fill-slim" id="downloadProgress"></div>
+              </div>
+              <span class="progress-text" id="downloadProgressText">0%</span>
+            </div>
+            <button
+              class="btn btn-download"
+              onclick="downloadGlobal()"
+              id="downloadBtn"
+            >
+              Download Model
+            </button>
+          </div>
+
+          <div class="action-card card">
+            <div class="action-icon train-icon">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M12 1v6m0 6v6m8.66-14.66l-4.24 4.24m-8.84 8.84l-4.24 4.24m16.32 0l-4.24-4.24m-8.84-8.84l-4.24-4.24"
+                ></path>
+              </svg>
+            </div>
+            <h3>Train Local Model</h3>
+            <p>Train on Hospital {{ hospital_id }}'s data</p>
+            <div class="epoch-control">
+              <label for="epochs">Epochs:</label>
+              <input type="number" id="epochs" value="5" min="1" max="20" />
+            </div>
+            <button
+              class="btn btn-train"
+              onclick="startTraining()"
+              id="trainBtn"
+            >
+              Start Training
+            </button>
+          </div>
+
+          <div class="action-card card">
+            <div class="action-icon upload-icon">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3>Push to Global</h3>
+            <p>Upload weights to improve global model</p>
+            <div
+              class="progress-wrapper"
+              id="pushProgressWrapper"
+              style="display: none"
+            >
+              <div class="progress-bar-slim">
+                <div class="progress-fill-slim" id="pushProgress"></div>
+              </div>
+              <span class="progress-text" id="pushProgressText">0%</span>
+            </div>
+            <button
+              class="btn btn-upload"
+              onclick="pushToGlobal()"
+              id="pushBtn"
+            >
+              Push to Global
+            </button>
+          </div>
+        </section>
+
+        <!-- Status Dashboard -->
+        <section class="dashboard-grid">
+          <!-- Training Status -->
+          <div class="card status-card">
+            <h3>Training Status</h3>
+            <div class="status-content">
+              <div class="status-indicator-large" id="trainingStatus">
+                <div class="pulse-ring"></div>
+                <span class="status-icon">⏸</span>
+                <span class="status-label">Idle</span>
+              </div>
+              <div class="status-details">
+                <div class="detail-item">
+                  <span class="detail-label">Model Status</span>
+                  <span class="detail-value" id="modelStatus">Not Trained</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Global Model</span>
+                  <span class="detail-value" id="globalStatus"
+                    >Not Downloaded</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Current Metrics -->
+          <div class="card metrics-card">
+            <h3>Latest Metrics</h3>
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">Loss</span>
+                <span class="metric-value" id="currentLoss">-</span>
+                <div class="metric-bar">
+                  <div class="metric-fill loss-fill" id="lossFill"></div>
+                </div>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Accuracy</span>
+                <span class="metric-value" id="currentAcc">-</span>
+                <div class="metric-bar">
+                  <div class="metric-fill acc-fill" id="accFill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Training Progress -->
+          <div class="card progress-card">
+            <h3>Training Progress</h3>
+            <div class="progress-content">
+              <div class="epoch-info">
+                <span>Current Epoch</span>
+                <span id="epochProgress">0 / 0</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" id="trainingProgress"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PDF Analysis Section -->
+        <section class="actions-grid" style="margin-top: 30px">
+          <div class="action-card card">
+            <div
+              class="action-icon"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              "
+            >
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                ></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <h3>📄 Upload Patient Report PDF</h3>
+            <p>AI-powered analysis with Gemini</p>
+            <input
+              type="file"
+              id="pdfUpload"
+              accept=".pdf"
+              style="display: none"
+              onchange="uploadPDF()"
+            />
+            <button
+              class="btn"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              "
+              onclick="document.getElementById('pdfUpload').click()"
+            >
+              Choose PDF File
+            </button>
+            <div
+              id="uploadStatus"
+              style="margin-top: 10px; font-size: 14px"
+            ></div>
+          </div>
+
+          <div class="action-card card">
+            <div
+              class="action-icon"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+            >
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <h3>📥 Download Analysis Reports</h3>
+            <p>View generated medical summaries</p>
+            <button
+              class="btn"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+              onclick="viewReports()"
+            >
+              View Reports
+            </button>
+            <div
+              id="reportsList"
+              style="margin-top: 15px; max-height: 200px; overflow-y: auto"
+            ></div>
+          </div>
+        </section>
+
+        <!-- Training History Chart -->
+        <section class="chart-section card">
+          <h3>Training History</h3>
+          <canvas id="historyChart"></canvas>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="log-section card">
+          <div class="log-header">
+            <h3>Activity Log</h3>
+            <div class="log-controls">
+              <button class="btn btn-small" onclick="clearLogs()">Clear</button>
+              <button
+                class="btn btn-small"
+                id="autoScrollBtn"
+                onclick="toggleAutoScroll()"
+              >
+                Auto-scroll: ON
+              </button>
+            </div>
+          </div>
+          <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">
+              <span class="log-time">00:00:00</span>
+              <span class="log-message"
+                >Hospital {{ hospital_id }} interface ready</span
+              >
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const HOSPITAL_ID = "{{ hospital_id }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/hospital_app.js') }}"></script>
+  </body>
+</html>
