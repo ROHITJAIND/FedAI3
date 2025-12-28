@@ -12,6 +12,17 @@ Ultrasound quality varies wildly between machines (GE vs. Philips vs. Siemens). 
 
 Federated Learning allows the model to learn from all hospitals' data simultaneously, creating a robust "Universal Sonographer" AI, while data remains locked in each local hospital.
 
+### Working Demo
+
+<video width="800" controls>
+  <source src="demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+*Demo video showing the federated learning system in action with Auth0 authentication and real-time ultrasound analysis*
+
+
+
 ## 🏗️ Architecture
 
 ### Components
@@ -169,10 +180,3 @@ print(result)  # Position: Breech, Confidence: 98%
 - **Session Management**: Secure session handling with encrypted cookies
 - **Protected Endpoints**: All sensitive operations require authentication
 
-## 📄 License
-
-Educational Project - 2025
-
-## 👥 Authors
-
-SEC - Semester 7 Project
